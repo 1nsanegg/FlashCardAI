@@ -1,3 +1,5 @@
+# This class works as a controller, take flashcards and display it
+
 class FlashcardTrainer:
     def __init__(self, flashcards):
         self.flashcards = flashcards

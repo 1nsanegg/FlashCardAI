@@ -1,32 +1,36 @@
-from transformers import AutoModelForCausalLM, AutoTokenizer
-import torch
-from huggingface_hub import login
-import os
-from dotenv import load_dotenv
-access_token = os.getenv("HF_ACCESS_TOKEN")  # Read from environment variable
+# This class is used for generate raw data from gpt-oss
+# First you need to install ollama and gpt-oss to your computer
+# Run it and check the status on http://localhost:11434
+# If it works then you can send request to it
 
-load_dotenv()
-# Login to Hugging Face (Enter token when prompted)
-login(access_token)
 
-# Model name
-model_name = "meta-llama/Llama-2-7b-chat-hf"
+import requests
 
-# Load tokenizer & model
-tokenizer = AutoTokenizer.from_pretrained(model_name, use_auth_token=True)
-model = AutoModelForCausalLM.from_pretrained(
-    model_name,
-    torch_dtype=torch.float32,  # float16 only works on GPUs, so use float32
-    device_map=None,  # This prevents auto-assigning CUDA
-    token=access_token
-)
+MODEL_NAME = "gpt-oss"
 
-# Generate flashcard data
-prompt = "Give me a vocabulary word, its definition, and an example sentence."
-# inputs = tokenizer(prompt, return_tensors="pt").to("cuda")  # Change to "cpu" if no GPU
-inputs = tokenizer(prompt, return_tensors="pt").to("cpu")
-output = model.generate(**inputs, max_length=100)
-result = tokenizer.decode(output[0], skip_special_tokens=True)
+def get_flashcards():
+    """Fetch flashcard text from local GPT-OSS via Ollama."""
+    prompt = """
+    Generate 5 vocabulary flashcards.
+    Format each card as:
+    Word: <word>
+    Definition: <definition>
+    Example: <example sentence>
+    ---
+    """
 
-print("Generated Flashcards:")
-print(result)
+    res = requests.post(
+        "http://localhost:11434/api/generate",
+        json={
+            "model": MODEL_NAME,
+            "prompt": prompt,
+            "stream": False
+        }
+    )
+
+    data = res.json()
+    return data["response"]
+
+# Run the test to see if you can get data from gpt-oss
+if __name__ == "__main__":
+    print(get_flashcards())

@@ -1,3 +1,5 @@
+# This class is used for define a flashcard
+
 class Flashcard:
     def __init__(self, word, definition, example):
         self.word = word
